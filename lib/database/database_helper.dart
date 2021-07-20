@@ -31,53 +31,62 @@ class DatabaseHelper {
 
 //create table
   _onCreateDB(Database db, int version) async {
-    await db.execute(
-        '''
-        CREATE TABLE  User (
-      id INTEGER PRIMARY KEY,
-       firstname TEXT,
-        lastname TEXT,
+    await db.execute(''' CREATE TABLE  User (
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         firstname TEXT,
+         lastname TEXT,
          email TEXT,
          phone TEXT,
-         gender TEXT ,
-         dataofbirth TEXT ,
-         picture TEXT,
-         password TEXT,
-         address TEXT)
-        
-    ''');
-    await db.execute(
-        ''' CREATE TABLE  Contacts (
-      id INTEGER PRIMARY KEY,
+         gender TEXT,
+         dataofbirth TEXT,
+         password TEXT
+         )''');
+    await db.execute(''' CREATE TABLE  Contacts (
+         id INTEGER PRIMARY KEY,
          name TEXT,
          phone TEXT,
          address TEXT,
-         userid INTEGER
+         FOREIGN KEY(userid) REFERENCES User(id)
          )''');
   }
 
   Future<int> insertUser(User user) async {
     Database? db = await database;
+    // var res = await db!.rawInsert('''
+    // INSERT INTO User(firstname ,lastname ,email , phone ,gender , dataofbirth ,picture , password ,address )
+    // VALUES ($user.firstname , $user.lastname , $user.email , $user.phone , $user.gender ,$user.dataofbirth ,$user.picture , $user.password , $user.address);
+    // ''');
+    var res = await db!.insert('User', user.toJson());
+    // Future.delayed(Duration(seconds: 3));
+    // var rese = await db.rawQuery("SELECT email FROM User");
+    // print(rese);
+    return res;
+  }
 
-    return await db!.insert('User', user.toMap());
+  Future<dynamic> getLastID() async {
+    Database? db = await database;
+    var res = await db!.rawQuery("SELECT last_insert_rowid() AS id");
+    print("here the last id : $res");
+    return res;
   }
 
   Future<int> updateUser(User user) async {
     Database? db = await database;
     return await db!
-        .update('User', user.toMap(), where: 'id=?', whereArgs: [user.id]);
+        .update('User', user.toJson(), where: 'id=?', whereArgs: [user.id]);
   }
 
-  Future<User?> getLogin(String email, String password) async {
+  Future<dynamic> getLogin(String email, String password) async {
     var dbClient = await database;
     var res = await dbClient!.rawQuery(
-        "SELECT * FROM User WHERE email = '$email' and password = '$password'");
+        "SELECT id ,firstname, lastname ,email ,phone  ,gender ,dataofbirth ,password FROM User WHERE email = '$email' and password = '$password'");
+    print(res);
 
     if (res.length > 0) {
-      return new User.fromMap(res.first);
+      return new User.fromJson(res.first);
     }
 
-    return null;
+    return 0;
   }
 
   // auth(String email, String password) async {
@@ -86,7 +95,7 @@ class DatabaseHelper {
   //       "SELECT * FROM User WHERE email =? [$email] AND password = ?$password ");
   //   return contacts.length;
   // }
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<int> deleteUser(int id) async {
     Database? db = await database;
     return await db!.delete('User', where: 'id=?', whereArgs: [id]);
@@ -95,10 +104,10 @@ class DatabaseHelper {
   Future<List<User>> fetchUsers() async {
     Database? db = await database;
     List<Map> users = await db!.query('User');
-    return users.length == 0 ? [] : users.map((e) => User.fromMap(e)).toList();
+    return users.length == 0 ? [] : users.map((e) => User.fromJson(e)).toList();
   }
 
-//=================================contact======================================
+//=================================  contact  ======================================
   Future<int> insertContact(Contact contact) async {
     Database? db = await database;
     return await db!.insert('Contacts', contact.toMap());
@@ -115,9 +124,10 @@ class DatabaseHelper {
     return await db!.delete('Contacts', where: 'id=?', whereArgs: [id]);
   }
 
-  Future<List<Contact>> fetchContacts() async {
+  Future<List<Contact>> fetchContacts(String id) async {
     Database? db = await database;
-    List<Map> contacts = await db!.query('Contacts');
+    List<Map> contacts = await db!
+        .rawQuery('SELECT * FROM Contacts WHERE Contacts.userid = $id ');
     return contacts.length == 0
         ? []
         : contacts.map((e) => Contact.fromMap(e)).toList();

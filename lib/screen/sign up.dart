@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:email_validator/email_validator.dart';
@@ -30,19 +31,19 @@ class _SignupState extends State<Signup> {
     // createDataBase();
   }
 
-  TextEditingController firstNameController = TextEditingController();
-  TextEditingController lastNameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController genderController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController databirthController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  TextEditingController? firstNameController = TextEditingController();
+  TextEditingController? lastNameController = TextEditingController();
+  TextEditingController? emailController = TextEditingController();
+  TextEditingController? phoneController = TextEditingController();
+  TextEditingController? addressController = TextEditingController();
+  TextEditingController? passwordController = TextEditingController();
+  TextEditingController? databirthController = TextEditingController();
+
   SharedPreferences? preferences;
   final signupformKey = new GlobalKey<FormState>();
   User user = User();
   String? _birthdayVar;
-  String _dropDownValue = 'Male';
+  String dropDownValue = 'Male';
   bool ispass = true;
   int? id;
   String? firstname;
@@ -52,21 +53,10 @@ class _SignupState extends State<Signup> {
   String? email;
 
   //------------------shared preferences----------------------------------------
-  savepref(
-    String? firstName,
-    String? lastName,
-    String? email,
-    int? id,
-    String? picture,
-    String? phone,
-  ) async {
+  savepref(User user) async {
     preferences = await SharedPreferences.getInstance();
-    preferences!.setString('firstname', firstName!);
-    preferences!.setString('lastname', lastName!);
-    preferences!.setString('email', email!);
-    preferences!.setString('id', id!.toString());
-    preferences!.setString('picture', picture.toString());
-    preferences!.setString('phone', phone.toString());
+    bool truee = await preferences!.setString("User", jsonEncode(user));
+    print(truee);
   }
   //----------------------img from device---------------------------------------
 
@@ -88,6 +78,7 @@ class _SignupState extends State<Signup> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -192,7 +183,7 @@ class _SignupState extends State<Signup> {
                                         ]),
                                     child: Center(
                                       child: DropdownButton<String>(
-                                        value: _dropDownValue,
+                                        value: dropDownValue,
                                         icon: const Icon(Icons.arrow_downward),
                                         iconSize: 24,
                                         elevation: 16,
@@ -350,9 +341,9 @@ class _SignupState extends State<Signup> {
 
   _addGender(var value) {
     setState(() {
-      _dropDownValue = value;
+      dropDownValue = value;
     });
-    _dropDownValue = value;
+    dropDownValue = value;
   }
 
   _addBirthday() async {
@@ -364,44 +355,53 @@ class _SignupState extends State<Signup> {
       helpText: 'Select a date',
     );
     _birthdayVar = "${temp!.day}/${temp.month}/${temp.year}";
-    if (_birthdayVar == null) return;
-    databirthController.text = _birthdayVar!;
+    print(_birthdayVar);
+    if (_birthdayVar!.isEmpty) return;
+    databirthController!.text = _birthdayVar!;
   }
 
-  getuserid() async {
-    Database? db = await DatabaseHelper.instance.database;
-    List<Map> x = await db!
-        .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
-    for (var item in x) {
-      id = item['id'];
-      print('===================$id');
-    }
-    savepref(user.firstname, user.lastname, user.email, id, user.picture,
-        user.phone);
-    return id;
-  }
+  // getuserid() async {
+  //   Database? db = await DatabaseHelper.instance.database;
+  //   List<Map> x = await db!
+  //       .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
+  //   for (var item in x) {
+  //     id = item['id'];
+  //     print('===================$id');
+  //   }
+  //   savepref(user.firstname, user.lastname, user.email, id!+1, user.picture, user.phone);
+  //   return id;
+  // }
 
-  signupInsert() {
+  signupInsert() async {
     if (signupformKey.currentState!.validate()) {
-      getuserid();
-      user.id = id;
-      user.firstname = firstNameController.text.toString();
-      user.lastname = lastNameController.text.toString();
-      user.email = emailController.text.toString();
-      user.phone = phoneController.text.toString();
-      user.password = passwordController.text.toString();
-      user.gender = genderController.text.toString();
-      user.dataofbirth = databirthController.text.toString();
+      preferences = await SharedPreferences.getInstance();
+      user.firstname = firstNameController!.text.toString();
+      user.lastname = lastNameController!.text.toString();
+      user.email = emailController!.text.toString();
+      user.phone = phoneController!.text.toString();
+      user.password = passwordController!.text.toString();
+      user.gender = dropDownValue;
+      user.dataofbirth = databirthController!.text.toString();
+      await DatabaseHelper.instance
+          .getLastID()
+          .then((value) => user.id = value[0]['id']);
+      print(user.id);
       if (_file != null) {
-        user.picture = Utility.base64String(_file!.readAsBytesSync());
+        preferences!.setString("IMG-KEY $user.id.toString()",
+            Utility.base64String(_file!.readAsBytesSync()));
       }
-
-      DatabaseHelper.instance.insertUser(user).then((value) {
+      print("here");
+      await DatabaseHelper.instance.insertUser(user).then((value) {
         // savepref(user.firstname, user.lastname, user.email, user.id,
+
+        if (value != 0) {
+          savepref(user);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => Home(user.id.toString())),
+          );
+        } else
+          print("ERROR");
         //     user.picture, user.phone);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => Home()),
-        );
       }).catchError((error) {
         print('feild insert ${error.toString()}');
       });

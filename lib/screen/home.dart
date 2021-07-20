@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite_common/sqlite_api.dart';
 import 'package:task/constant/drawer.dart';
 import 'package:task/database/database_helper.dart';
 import 'package:task/model/contact.dart';
 
 class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
-
+  String id;
+  Home(this.id);
   @override
   _HomeState createState() => _HomeState();
 }
@@ -42,6 +41,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    _contact.userid = widget.id as String?;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF4DA7AA),
@@ -119,7 +120,7 @@ class _HomeState extends State<Home> {
         ),
       );
   _list() async {
-    List<Contact> t = await _dbHelper!.fetchContacts();
+    List<Contact> t = await _dbHelper!.fetchContacts(widget.id);
     setState(() {
       _contacts = t;
     });
@@ -233,7 +234,7 @@ class _HomeState extends State<Home> {
   }
 
   _refreshContactList() async {
-    List<Contact> x = await _dbHelper!.fetchContacts();
+    List<Contact> x = await _dbHelper!.fetchContacts(widget.id);
     setState(() {
       _contacts = x;
     });

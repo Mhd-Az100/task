@@ -246,32 +246,42 @@ class _SigninState extends State<Signin> {
       return null;
   }
 
-  getuserid() async {
-    Database? db = await DatabaseHelper.instance.database;
-    List<Map> x = await db!
-        .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
-    for (var item in x) {
-      id = item['id'];
-      print('===================$id');
-    }
-    // savepref(user.firstname, user.lastname, user.email, id, user.picture,
-    //     user.phone);
-    return id;
-  }
+  // getuserid() async {
+  //   Database? db = await DatabaseHelper.instance.database;
+  //   List<Map> x = await db!
+  //       .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
+  //   for (var item in x) {
+  //     id = item['id'];
+  //     print('===================$id');
+  //   }
+  //   // savepref(user.firstname, user.lastname, user.email, id, user.picture,
+  //   //     user.phone);
+  //   return id;
+  // }
 
 //==========================sign in==================
-  signin() {
+  signin() async {
     if (loginformKey.currentState!.validate()) {
+      loginformKey.currentState!.save();
       // getuserid();
-      Future<User?> getlog(String email, String password) {
-        var res = DatabaseHelper.instance.getLogin(user.email!, user.password!);
-        return res;
+      // Future<User?> getlog(String email, String password) {
+      //   var res = DatabaseHelper.instance.getLogin(user.email!, user.password!);
+      //   return res;
+      // }
+      var res =
+          await DatabaseHelper.instance.getLogin(user.email!, user.password!);
+      if (res == 0) {
+        Fluttertoast.showToast(
+            msg: 'error',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM);
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (ctx) => Home(res.id.toString()),
+          ),
+        );
       }
-
-      Fluttertoast.showToast(
-          msg: 'error',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM);
     }
   }
 }
