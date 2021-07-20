@@ -2,32 +2,43 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-import '../constent.dart';
+import 'package:task/constant/constent.dart';
 
 Widget textfaild(
     {Size? size,
     TextEditingController? controller,
-    String? val,
+    bool readOnly = false,
+    FormFieldValidator<String>? validator,
     String? heant,
     IconData? icon,
+    ValueChanged<String>? onChanged,
+    GestureTapCallback? onTap,
     FormFieldSetter<String>? onSaved,
+    IconData? suffixIcon,
+    bool ispassword = false,
+    VoidCallback? suffixPressed,
     TextInputType? txttype}) {
   return Container(
     width: (size!.width),
     height: 50,
-    padding: EdgeInsets.all(8),
+    padding: EdgeInsets.only(left: 5),
     margin: EdgeInsets.only(right: 10, left: 10, top: 10, bottom: 10),
     decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(10)),
         color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)]),
     child: TextFormField(
+      onTap: onTap,
+      onChanged: onChanged,
+      readOnly: readOnly,
       controller: controller,
       onSaved: onSaved,
       keyboardType: txttype,
-      validator: (val) => val!.length == 0 ? val : null,
+      validator: validator,
       decoration: InputDecoration(
+        suffixIcon: suffixIcon != null
+            ? IconButton(icon: Icon(suffixIcon), onPressed: suffixPressed)
+            : null,
         border: InputBorder.none,
         icon: Icon(
           icon,
@@ -38,6 +49,7 @@ Widget textfaild(
           color: klabelTextColor.withOpacity(0.5),
         ),
       ),
+      obscureText: ispassword,
     ),
   );
 }

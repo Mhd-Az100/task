@@ -2,13 +2,18 @@ import 'dart:io';
 
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:task/constent.dart';
+import 'package:task/constant/constent.dart';
 import 'package:task/database/database_helper.dart';
 import 'package:task/model/user.dart';
+import 'package:task/screen/home.dart';
 import 'package:task/screen/sign%20in.dart';
 import 'package:task/widget/widget.dart';
+
+import '../utility.dart';
 
 class Signup extends StatefulWidget {
   Signup({Key? key}) : super(key: key);
@@ -33,9 +38,36 @@ class _SignupState extends State<Signup> {
   TextEditingController addressController = TextEditingController();
   TextEditingController databirthController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  SharedPreferences? preferences;
   final signupformKey = new GlobalKey<FormState>();
-  User user = new User();
+  User user = User();
+  String? _birthdayVar;
+  String _dropDownValue = 'Male';
+  bool ispass = true;
+  int? id;
+  String? firstname;
+  String? lastname;
+  String? phone;
+  String? picture;
+  String? email;
 
+  //------------------shared preferences----------------------------------------
+  savepref(
+    String? firstName,
+    String? lastName,
+    String? email,
+    int? id,
+    String? picture,
+    String? phone,
+  ) async {
+    preferences = await SharedPreferences.getInstance();
+    preferences!.setString('firstname', firstName!);
+    preferences!.setString('lastname', lastName!);
+    preferences!.setString('email', email!);
+    preferences!.setString('id', id!.toString());
+    preferences!.setString('picture', picture.toString());
+    preferences!.setString('phone', phone.toString());
+  }
   //----------------------img from device---------------------------------------
 
   File? _file;
@@ -109,7 +141,9 @@ class _SignupState extends State<Signup> {
                                     txttype: TextInputType.name,
                                     heant: 'Ferst Name',
                                     icon: Icons.person_pin,
-                                    val: 'Please Enter Your First Name'),
+                                    validator: (val) => val!.length == 0
+                                        ? 'Please Enter Your First Name'
+                                        : null),
                                 textfaild(
                                     size: size / 2.5,
                                     onSaved: (val) =>
@@ -118,7 +152,9 @@ class _SignupState extends State<Signup> {
                                     txttype: TextInputType.name,
                                     heant: 'Last Name',
                                     icon: Icons.person_pin,
-                                    val: 'Please Enter Your Last Name'),
+                                    validator: (val) => val!.length == 0
+                                        ? 'Please Enter Your Last Name'
+                                        : null),
                               ],
                             ),
                           ),
@@ -128,44 +164,82 @@ class _SignupState extends State<Signup> {
                               children: [
                                 textfaild(
                                     size: size / 2.5,
-                                    onSaved: (val) =>
-                                        setState(() => user.dataofbirth = val),
+                                    onTap: () => _addBirthday(),
+                                    onSaved: (val) => setState(
+                                        () => user.dataofbirth = _birthdayVar),
+                                    readOnly: true,
                                     controller: databirthController,
                                     txttype: TextInputType.datetime,
                                     heant: 'DateBirth',
                                     icon: Icons.date_range,
-                                    val: 'Please Enter Your DataBirth'),
-                                textfaild(
-                                    size: size / 2.5,
-                                    onSaved: (val) =>
-                                        setState(() => user.gender = val),
-                                    controller: databirthController,
-                                    txttype: TextInputType.datetime,
-                                    heant: 'Gender',
-                                    icon: Icons.date_range,
-                                    val: 'Please Enter Your DataBirth'),
+                                    validator: (val) => val!.length == 0
+                                        ? 'Please Enter Your Birth'
+                                        : null),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Container(
+                                    width: size.width / 2.5,
+                                    // padding:
+                                    //     EdgeInsets.symmetric(horizontal: 20),
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black12,
+                                              blurRadius: 5)
+                                        ]),
+                                    child: Center(
+                                      child: DropdownButton<String>(
+                                        value: _dropDownValue,
+                                        icon: const Icon(Icons.arrow_downward),
+                                        iconSize: 24,
+                                        elevation: 16,
+                                        style: const TextStyle(
+                                            color: Color(0xFF4DA7AA),
+                                            fontSize: 20),
+                                        underline: Container(
+                                          height: 2,
+                                          color: Colors.white,
+                                        ),
+                                        onChanged: (newValue) {
+                                          _addGender(newValue);
+                                        },
+                                        items: <String>['Male', 'Female']
+                                            .map<DropdownMenuItem<String>>(
+                                                (String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
 
                           textfaild(
-                              size: size,
-                              controller: phoneController,
-                              onSaved: (val) =>
-                                  setState(() => user.phone = val),
-                              txttype: TextInputType.number,
-                              heant: 'Phone',
-                              icon: Icons.phone,
-                              val: 'Please Enter Your phone'),
+                            size: size,
+                            controller: phoneController,
+                            validator: validateMobile,
+                            onSaved: (val) => setState(() => user.phone = val),
+                            txttype: TextInputType.number,
+                            heant: 'Phone',
+                            icon: Icons.phone,
+                          ),
                           textfaild(
-                              size: size,
-                              controller: emailController,
-                              txttype: TextInputType.emailAddress,
-                              heant: 'email',
-                              onSaved: (val) =>
-                                  setState(() => user.email = val),
-                              icon: Icons.email,
-                              val: 'Please Enter Your email'),
+                            size: size,
+                            controller: emailController,
+                            txttype: TextInputType.emailAddress,
+                            heant: 'email',
+                            onSaved: (val) => setState(() => user.email = val),
+                            icon: Icons.email,
+                            validator: validateEmail,
+                          ),
                           textfaild(
                               size: size,
                               controller: passwordController,
@@ -173,20 +247,32 @@ class _SignupState extends State<Signup> {
                                   setState(() => user.password = val),
                               txttype: TextInputType.visiblePassword,
                               heant: 'Password',
-                              icon: Icons.date_range,
-                              val: 'Please Enter Your Password'),
+                              icon: Icons.lock,
+                              ispassword: ispass,
+                              suffixIcon: ispass
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              suffixPressed: () {
+                                setState(() {
+                                  ispass = !ispass;
+                                });
+                              },
+                              validator: (val) => val!.length == 0
+                                  ? 'Please Enter Your Password'
+                                  : null),
                           //------------------------------button Sign Up----------------
 
                           RawMaterialButton(
                             onPressed: () {
-                              user.firstname = firstNameController.toString();
-                              user.lastname = lastNameController.toString();
-                              user.email = emailController.toString();
-                              user.phone = phoneController.toString();
-                              user.password = passwordController.toString();
-                              user.gender = genderController.toString();
-                              user.dataofbirth = databirthController.toString();
-                              DatabaseHelper.instance.insertUser(user);
+                              if (_file != null) {
+                                signupInsert();
+                              } else {
+                                Fluttertoast.showToast(
+                                    msg: 'choose picture please',
+                                    backgroundColor: Color(0xC7E64141),
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM);
+                              }
                             },
                             padding: EdgeInsets.all(0.0),
                             shape: RoundedRectangleBorder(
@@ -199,7 +285,7 @@ class _SignupState extends State<Signup> {
                                   borderRadius: BorderRadius.all(
                                     Radius.circular(15.0),
                                   )),
-                              padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
+                              padding: EdgeInsets.fromLTRB(20, 7, 20, 5),
                               child: Text(
                                 'Sign Up',
                                 textAlign: TextAlign.center,
@@ -246,61 +332,79 @@ class _SignupState extends State<Signup> {
     );
   }
 
-  // void createDataBase() async {
-  //   database = await openDatabase('task1.db', version: 1,
-  //       onCreate: (database, version) async {
-  //     print('data base created');
-  //     await database
-  //         .execute(
-  //             'CREATE TABLE Task (id INTEGER PRIMARY KEY, firstname TEXT, lastname TEXT, email TEXT,phone INTEGER,gender TEXT ,dataofbirth TEXT ,picture TEXT,password TEXT,address TEXT)')
-  //         .then((value) {
-  //       print('table created');
-  //     }).catchError((error) {
-  //       print('Error When Created Table ${error.toString()}');
-  //     });
-  //   }, onOpen: (database) {
-  //     print('data base opened');
-  //   });
-  // }
-
-  // Future insertToDataBase({
-  //   @required String? firstname,
-  //   String? lastname,
-  //   String? email,
-  //   int? phone,
-  //   String? gender,
-  //   String? databirth,
-  //   String? picture,
-  //   String? password,
-  //   String? address,
-  // }) async {
-  //   return await database!.transaction((txn) async {
-  //     await txn
-  //         .rawInsert(
-  //             'INSERT INTO Task(firstname,lastname,email,phone,gender,dataofbirth,picture ,password,address )VALUES("mohamad","az","mohamadalazmeh4@gmail.com","0931480357","male","2001","x","12345","damas")')
-  //         .then((value) {
-  //       print('$value insert succes');
-  //     }).catchError((error) {
-  //       print('insert error ${error.toString()}');
-  //     });
-  //   });
-  // }
-
-  String? validateMobile(String value) {
-    if (value.length == 0)
+  String? validateMobile(String? value) {
+    if (value!.length == 0)
       return 'Please enter PhoneNumber';
-    else if (value.length != 9)
-      return 'Mobile Number Must be like (+963-9********)';
     else
       return null;
   }
 
-  String? validateEmail(String value) {
-    if (value.length == 0)
+  String? validateEmail(String? value) {
+    if (value!.length == 0)
       return 'Please enter your Email';
     else if (!EmailValidator.validate(value))
       return 'Please enter a valid Email';
     else
       return null;
+  }
+
+  _addGender(var value) {
+    setState(() {
+      _dropDownValue = value;
+    });
+    _dropDownValue = value;
+  }
+
+  _addBirthday() async {
+    DateTime? temp = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      helpText: 'Select a date',
+    );
+    _birthdayVar = "${temp!.day}/${temp.month}/${temp.year}";
+    if (_birthdayVar == null) return;
+    databirthController.text = _birthdayVar!;
+  }
+
+  getuserid() async {
+    Database? db = await DatabaseHelper.instance.database;
+    List<Map> x = await db!
+        .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
+    for (var item in x) {
+      id = item['id'];
+      print('===================$id');
+    }
+    savepref(user.firstname, user.lastname, user.email, id, user.picture,
+        user.phone);
+    return id;
+  }
+
+  signupInsert() {
+    if (signupformKey.currentState!.validate()) {
+      getuserid();
+      user.id = id;
+      user.firstname = firstNameController.text.toString();
+      user.lastname = lastNameController.text.toString();
+      user.email = emailController.text.toString();
+      user.phone = phoneController.text.toString();
+      user.password = passwordController.text.toString();
+      user.gender = genderController.text.toString();
+      user.dataofbirth = databirthController.text.toString();
+      if (_file != null) {
+        user.picture = Utility.base64String(_file!.readAsBytesSync());
+      }
+
+      DatabaseHelper.instance.insertUser(user).then((value) {
+        // savepref(user.firstname, user.lastname, user.email, user.id,
+        //     user.picture, user.phone);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => Home()),
+        );
+      }).catchError((error) {
+        print('feild insert ${error.toString()}');
+      });
+    }
   }
 }

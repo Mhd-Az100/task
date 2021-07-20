@@ -10,7 +10,8 @@ class User {
   String? dataofbirth;
   String? picture;
   User(
-      {this.firstname,
+      {this.id,
+      this.firstname,
       this.password,
       this.lastname,
       this.address,
@@ -20,6 +21,7 @@ class User {
       this.picture,
       this.dataofbirth});
   User.fromMap(Map<dynamic, dynamic> map) {
+    this.id = map['id'];
     this.firstname = map['firstname'];
     this.lastname = map['lastname'];
     this.password = map['password'];
@@ -31,17 +33,18 @@ class User {
     this.dataofbirth = map['dataofbirth'];
   }
   Map<String, dynamic> toMap() {
-    var map = new Map<String, dynamic>();
-    map["firstname"] = firstname;
-    map["lastname"] = lastname;
-    map["email"] = email;
-    map["password"] = password;
-    map["address"] = address;
-    map["dataofbirth"] = dataofbirth;
-    map["gender"] = gender;
-    map["phone"] = phone;
-    map["picture"] = picture;
-
+    var map = <String, dynamic>{
+      "id": id,
+      "firstname": firstname,
+      "lastname": lastname,
+      "email": email,
+      "password": password,
+      "address": address,
+      "dataofbirth": dataofbirth,
+      "gender": gender,
+      "phone": phone,
+      "picture": picture,
+    };
     return map;
   }
 }
