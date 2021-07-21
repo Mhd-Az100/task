@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task/screen/home.dart';
-import 'package:task/screen/sign%20in.dart';
+import 'package:task/screen/splash.dart';
 
 import 'model/user.dart';
 
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Signin(),
+      home: Splash(),
     );
   }
 }
@@ -40,7 +40,6 @@ class Homepage extends StatelessWidget {
     if (userMap.isNotEmpty) {
       user = User.fromJson(userMap);
     }
-
   }
 
   @override

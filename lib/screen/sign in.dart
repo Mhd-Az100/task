@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:task/constant/constent.dart';
 import 'package:task/database/database_helper.dart';
 import 'package:task/model/user.dart';
@@ -19,8 +20,6 @@ class Signin extends StatefulWidget {
 enum LoginStatus { notSignIn, signIn }
 
 class _SigninState extends State<Signin> {
-  // LoginStatus _loginStatus = LoginStatus.notSignIn;
-  // bool _isLoading = false;
   var loginEmailController = TextEditingController();
   var loginPasswordController = TextEditingController();
   final loginformKey = new GlobalKey<FormState>();
@@ -28,11 +27,6 @@ class _SigninState extends State<Signin> {
   User user = new User();
   SharedPreferences? preferences;
   int? id;
-
-  // LoginResponse? _response;
-  // _LoginPageState() {
-  //   _response = new LoginResponse(this);
-  // }
 
   @override
   void initState() {
@@ -162,10 +156,10 @@ class _SigninState extends State<Signin> {
                                       decoration: BoxDecoration(
                                           gradient: kButtongradientColor,
                                           borderRadius: BorderRadius.all(
-                                            Radius.circular(15.0),
+                                            Radius.circular(10.0),
                                           )),
                                       padding:
-                                          EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                          EdgeInsets.fromLTRB(20, 10, 20, 5),
                                       child: Text(
                                         'Sign in',
                                         textAlign: TextAlign.center,
@@ -220,22 +214,11 @@ class _SigninState extends State<Signin> {
   }
 
   //------------------shared preferences----------------------------------------
-  // savepref(
-  //   String? firstName,
-  //   String? lastName,
-  //   String? email,
-  //   int? id,
-  //   String? picture,
-  //   String? phone,
-  // ) async {
-  //   preferences = await SharedPreferences.getInstance();
-  //   preferences!.setString('firstname', firstName!);
-  //   preferences!.setString('lastname', lastName!);
-  //   preferences!.setString('email', email!);
-  //   preferences!.setString('id', id!.toString());
-  //   preferences!.setString('picture', picture.toString());
-  //   preferences!.setString('phone', phone.toString());
-  // }
+  savepref(User user) async {
+    preferences = await SharedPreferences.getInstance();
+    bool truee = await preferences!.setString("User", jsonEncode(user));
+    print(truee);
+  }
 
   String? validateEmail(String? value) {
     if (value!.length == 0)
@@ -245,19 +228,6 @@ class _SigninState extends State<Signin> {
     else
       return null;
   }
-
-  // getuserid() async {
-  //   Database? db = await DatabaseHelper.instance.database;
-  //   List<Map> x = await db!
-  //       .rawQuery("SELECT * FROM User WHERE id=(SELECT MAX(id) FROM User)");
-  //   for (var item in x) {
-  //     id = item['id'];
-  //     print('===================$id');
-  //   }
-  //   // savepref(user.firstname, user.lastname, user.email, id, user.picture,
-  //   //     user.phone);
-  //   return id;
-  // }
 
 //==========================sign in==================
   signin() async {
@@ -272,10 +242,13 @@ class _SigninState extends State<Signin> {
           await DatabaseHelper.instance.getLogin(user.email!, user.password!);
       if (res == 0) {
         Fluttertoast.showToast(
+            backgroundColor: Color(0xC5E22222),
             msg: 'error',
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM);
       } else {
+        user = res;
+        savepref(user);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (ctx) => Home(res.id.toString()),

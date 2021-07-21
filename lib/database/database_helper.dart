@@ -35,6 +35,7 @@ class DatabaseHelper {
          id INTEGER PRIMARY KEY AUTOINCREMENT,
          firstname TEXT,
          lastname TEXT,
+         address TEXT,
          email TEXT,
          phone TEXT,
          gender TEXT,
@@ -43,6 +44,7 @@ class DatabaseHelper {
          )''');
     await db.execute(''' CREATE TABLE  Contacts (
          id INTEGER PRIMARY KEY,
+         userid INTEGER,
          name TEXT,
          phone TEXT,
          address TEXT,
@@ -56,6 +58,7 @@ class DatabaseHelper {
     // INSERT INTO User(firstname ,lastname ,email , phone ,gender , dataofbirth ,picture , password ,address )
     // VALUES ($user.firstname , $user.lastname , $user.email , $user.phone , $user.gender ,$user.dataofbirth ,$user.picture , $user.password , $user.address);
     // ''');
+    // user.id = null;
     var res = await db!.insert('User', user.toJson());
     // Future.delayed(Duration(seconds: 3));
     // var rese = await db.rawQuery("SELECT email FROM User");

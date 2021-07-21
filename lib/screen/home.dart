@@ -20,17 +20,6 @@ class _HomeState extends State<Home> {
   final _ctrlAddress = TextEditingController();
   @override
   void initState() {
-    //   getuserid() async {
-    //   Database? db = await _dbHelper!.database;
-    //   List<Map> x = await db!.rawQuery(
-    //       "select max(id) from User");
-    //   for (var item in x) {
-    //     item['name'];
-    //     item['mobile'];
-    //     item['address'];
-    //     item['birthday'];
-    //   }
-    // }
     super.initState();
 
     setState(() {
@@ -41,33 +30,41 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    _contact.userid = widget.id as String?;
-
+    _contact.userid = int.parse(widget.id);
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color(0xFF4DA7AA),
       ),
       drawer: MyDrawer(),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              _form(),
-              TextButton(
-                onPressed: () => _list(),
-                child: Text('Show All Contacts'),
-              ),
-            ],
+      body: Stack(children: [
+        Container(
+          height: size.height * 0.3,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage("img/img.jpg"),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
-      ),
+        Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                _form(),
+              ],
+            ),
+          ),
+        )
+      ]),
     );
   }
 
   _form() => Container(
         color: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
         child: Form(
           key: _formKey,
           child: Column(
@@ -106,15 +103,46 @@ class _HomeState extends State<Home> {
                     (val!.length == 0 ? 'This Field Is Required' : null),
               ),
               Container(
-                  margin: EdgeInsets.all(10.0),
                   child: Column(
-                    children: [
-                      TextButton(
-                        onPressed: () => _onSubmit(),
-                        child: Text('Submit'),
-                      ),
-                    ],
-                  )),
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 5,
+                          color: Colors.grey.withOpacity(0.3),
+                        )
+                      ],
+                      color: Color(0xFF4DA7AA),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _onSubmit(),
+                      child:
+                          Text('Submit', style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 5,
+                          color: Colors.grey.withOpacity(0.3),
+                        )
+                      ],
+                      color: Color(0xFF4DA7AA),
+                    ),
+                    child: TextButton(
+                      onPressed: () => _list(),
+                      child: Text('Show All Contacts',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              )),
             ],
           ),
         ),

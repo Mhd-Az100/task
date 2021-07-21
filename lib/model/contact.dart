@@ -3,7 +3,7 @@ class Contact {
   String? name;
   String? phone;
   String? address;
-  String? userid;
+  int? userid;
   Contact({this.id, this.name, this.phone, this.address, this.userid});
 
   Contact.fromMap(Map<dynamic, dynamic> map) {
